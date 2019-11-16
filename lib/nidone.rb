@@ -21,20 +21,44 @@ module Nidone
     end
   end
 
+  class Loader
+    def initialize(cache_path)
+      binary = File.read(cache_path)
+
+      @loader = RubyVM::InstructionSequence::Loader.new(binary)
+      extra = @loader.extra_data()
+
+      @index_table = @loader.load_obj(extra.to_i)
+    end
+
+    def load(path)
+      index = @index_table[path]
+      return nil if index.nil?
+
+      @loader.load_iseq(index)
+    end
+  end
+
   module InstructionSequenceMixin
     def load_iseq(path)
-      return nil if Nidone.dumper.nil?
-
-      iseq = RubyVM::InstructionSequence::compile_file(path)
-      Nidone.dumper.dump(path, iseq)
-      iseq
+      if Nidone.loader.nil?
+        # dump mode
+        iseq = RubyVM::InstructionSequence::compile_file(path)
+        Nidone.dumper.dump(path, iseq)
+        iseq
+      elsif
+        # load mode
+        Nidone.loader.load(path)
+      end
     end
   end
 
   class << self
+    attr_reader :loader
     attr_reader :dumper
 
     def setup(cache_path:)
+      @loader = Loader.new(cache_path) rescue nil
       @dumper = Dumper.new(cache_path)
 
       class << RubyVM::InstructionSequence
