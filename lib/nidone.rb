@@ -17,13 +17,13 @@ module Nidone
       index = @dumper.dump_obj(@index_table)
       binary = @dumper.binary(index.to_s)
 
-      File.write(@path, binary)
+      File.binwrite(@path, binary)
     end
   end
 
   class Loader
     def initialize(cache_path)
-      binary = File.read(cache_path)
+      binary = File.binread(cache_path)
 
       @loader = RubyVM::InstructionSequence::Loader.new(binary)
       extra = @loader.extra_data()
