@@ -58,13 +58,13 @@ module Nidone
     def load_iseq(path)
       hash = Digest::MD5.new.update(path)
       cache_path = "#{Nidone.cache_path}/#{hash}"
-      bin = File.read(cache_path) rescue nil
+      bin = File.binread(cache_path) rescue nil
       if bin.nil?
         iseq = RubyVM::InstructionSequence::compile_file(path)
-        File.write(cache_path, iseq.to_binary) rescue nil
+        File.binwrite(cache_path, iseq.to_binary)
         iseq
       else
-        RubyVM::InstructionSequence::load_from_binary(bin) rescue nil
+        RubyVM::InstructionSequence::load_from_binary(bin)
       end
     end
   end
