@@ -39,7 +39,7 @@ module Nidone
     end
   end
 
-  module InstructionSequenceMixin
+  module InstructionSequenceMixinUseDumper
     def load_iseq(path)
       if Nidone.loader.nil?
         # dump mode
@@ -53,16 +53,41 @@ module Nidone
     end
   end
 
+  module InstructionSequenceMixinWithoutDumper
+    def load_iseq(path)
+      hash = path.hash
+      cache_path = "#{Nidone.cache_path}/#{hash.to_s(16)}"
+      bin = File.read(cache_path) rescue nil
+      if bin.nil?
+        iseq = RubyVM::InstructionSequence::compile_file(path)
+        File.write(cache_path, iseq.to_binary) rescue nil
+        iseq
+      else
+        RubyVM::InstructionSequence::load_from_binary(bin) rescue nil
+      end
+    end
+  end
+
   class << self
+    attr_reader :cache_path
     attr_reader :loader
     attr_reader :dumper
 
-    def setup(cache_path:)
-      @loader = Loader.new(cache_path) rescue nil
-      @dumper = Dumper.new(cache_path)
+    def setup(cache_path: '.cache', use_dumper: true)
+      @cache_path = cache_path
+      if use_dumper
+        @loader = Loader.new(cache_path) rescue nil
+        @dumper = Dumper.new(cache_path)
+      end
 
-      class << RubyVM::InstructionSequence
-        prepend(InstructionSequenceMixin)
+      if use_dumper
+        class << RubyVM::InstructionSequence
+          prepend(InstructionSequenceMixinUseDumper)
+        end
+      else
+        class << RubyVM::InstructionSequence
+          prepend(InstructionSequenceMixinWithoutDumper)
+        end
       end
 
       at_exit {
