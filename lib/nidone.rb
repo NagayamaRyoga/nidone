@@ -1,4 +1,5 @@
 require "nidone/version"
+require "digest/md5"
 
 module Nidone
   class Dumper
@@ -55,8 +56,8 @@ module Nidone
 
   module InstructionSequenceMixinWithoutDumper
     def load_iseq(path)
-      hash = path.hash
-      cache_path = "#{Nidone.cache_path}/#{hash.to_s(16)}"
+      hash = Digest::MD5.new.update(path)
+      cache_path = "#{Nidone.cache_path}/#{hash}"
       bin = File.read(cache_path) rescue nil
       if bin.nil?
         iseq = RubyVM::InstructionSequence::compile_file(path)
