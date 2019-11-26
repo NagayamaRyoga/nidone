@@ -3,7 +3,7 @@
 require "bundler/setup"
 require "nidone"
 
-Nidone::setup(cache_path: ".cache", use_dumper: false)
+Nidone::setup(cache_path: ".cache", use_dumper: true)
 
 require "irb"
 IRB.start(__FILE__)

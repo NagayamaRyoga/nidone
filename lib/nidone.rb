@@ -42,7 +42,7 @@ module Nidone
 
   module InstructionSequenceMixinUseDumper
     def load_iseq(path)
-      if Nidone.loader.nil?
+      if !Nidone.dumper.nil?
         # dump mode
         iseq = RubyVM::InstructionSequence::compile_file(path)
         Nidone.dumper.dump(path, iseq)
@@ -78,7 +78,7 @@ module Nidone
       @cache_path = cache_path
       if use_dumper
         @loader = Loader.new(cache_path) rescue nil
-        @dumper = Dumper.new(cache_path)
+        @dumper = Dumper.new(cache_path) if @loader.nil?
       end
 
       if use_dumper
